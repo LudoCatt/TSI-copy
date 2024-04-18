@@ -7,6 +7,8 @@ import random
 import math
 from utils import *
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -17,6 +19,8 @@ from torch.utils.data import Dataset, DataLoader, TensorDataset
 PATH_TRAIN = '/Users/juliabarth/Desktop/DSLab/df_train.pkl'
 PATH_TEST = '/Users/juliabarth/Desktop/DSLab/df_test.pkl'
 TARGET_PATH = '/Users/juliabarth/Desktop/DSLab/'
+# Setting SPLIT = 0 is equivalent to training on the full data available and filling in the found gaps
+SPLIT = 0.2
 
 # Network hyperparameters
 input_size = 30
@@ -32,16 +36,22 @@ bidirectional = False
 
 ## READ-IN #####################################################################################
 
+# generate train test split if specified or use new test data
 df_train = pd.read_pickle(PATH_TRAIN)
-df_test = read_file(PATH_TEST)
+X_train = df_train.drop(['IrrB', 'TimeJD'], axis = 1)  # Features for training
+y_train = df_train['IrrB'] # Target
+
+if SPLIT > 0:
+    # Assuming a time-based split
+    X_train, X_test, y_train, y_test = train_test_split(X_train, y_train, test_size=0.2, random_state=42, shuffle=False)
+
+else:
+    df_test = read_file(PATH_TEST)
+    X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
 
 ## DATA PREPARATION ############################################################################
 
 # Normalize the data before proceeding
-X_train = df_train.drop(['IrrB', 'TimeJD'], axis = 1)  # Features for training
-y_train = df_train['IrrB'] # Target
-X_test = df_test.drop(['IrrB', 'TimeJD'], axis = 1) # Features for gaps
-
 scaler_X = MinMaxScaler()
 scaler_y = MinMaxScaler()
 
@@ -157,6 +167,9 @@ with torch.no_grad():
         outputs = model(inputs)
         predictions += outputs.squeeze().tolist()
 
+# Bring back to original scale
+predictions = scaler_y.inverse_transform(predictions)
+
 # Save outputs in desired folder
 predictions.to_csv(TARGET_PATH + 'predicted_data.csv', index = False)
 
@@ -167,14 +180,18 @@ predictions.to_csv(TARGET_PATH + 'predicted_data.csv', index = False)
 # Convert data in the appropriate format
 time_train = np.array(df_train['TimeJD'])
 time_test = np.array(df_test['TimeJD'])
-irr_train = np.array(y_train).ravel()
+
+# Make sure the plotted data is in the original scale
+irr_train = np.array(scaler_y.inverse_transform(y_train)).ravel()
 irr_test = np.array(predictions)
 
 # Create a single scatter plot with overlapping data points
 plt.figure(figsize=(30, 6))
 
 # Plot the original data in blue
-sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Original', s = 50)
+sns.scatterplot(x = time_train, y = irr_train,  color = 'royalblue', label='Original train', s = 50)
+if SPLIT > 0:
+    sns.scatterplot(x = time_test, y = y_test, color='lightblue', label='Original test', s = 50)
 sns.scatterplot(x = time_test, y = irr_test, color='deeppink', label='Predicted', s = 50)
 
 # Add title and legend
@@ -185,5 +202,13 @@ plt.ylabel('IrrB', fontsize=12)
 
 # Save plot in the desired folder
 plt.savefig(TARGET_PATH + 'output_plot.png')
+
+################################################################################################
+
+## ERROR MEASURE ###############################################################################
+
+# This is only available in case the code is being run with a split
+mse = mean_squared_error(y_test, irr_test)
+print(f"Mean Squared Error on the test split: {mse}")
 
 ################################################################################################

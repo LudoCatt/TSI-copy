@@ -6,6 +6,22 @@ import pandas as pd
 import os
 from utils import *
 
+## HYPERPARAMETERS ################################################################################
+
+SOURCE_L1_PATH = 'dummy'
+SOURCE_L2_PATH = 'dummy'
+
+PATH_FEATURES = '/Users/juliabarth/Desktop/DSLab/combined_CLARA_all.pkl'
+
+TARGET_PATH = "combined_data.pkl"
+
+time = "Irradiance TimeJD"
+target = "irradiance_B [W.m-2]"
+target2 = "irradiance_A [W.m-2]"
+target3 = "irradiance_C [W.m-2]"
+
+###################################################################################################
+
 def list_files_in_subfolders(folder_path):
     ''' Expected folder structure:
     
@@ -175,26 +191,9 @@ def merge_level1_level2(df_level1: pd.DataFrame, df_level2: pd.DataFrame) -> pd.
 
 def main():
     
-    ###################################################################################################
-    
     # LEFT JOIN (including gap data)
     
-    SOURCE_L1_PATH = 'dummy'
-    SOURCE_L2_PATH = 'dummy'
-
-    PATH_FEATURES = '/Users/juliabarth/Desktop/DSLab/combined_CLARA_all.pkl'
-
-    TARGET_PATH = "combined_data.pkl"
-    
-    time = "Irradiance TimeJD"
-    target = "irradiance_B [W.m-2]"
-    target2 = "irradiance_A [W.m-2]"
-    target3 = "irradiance_C [W.m-2]"
-
-    ###################################################################################################
-    
     features_level_1 = read_file(PATH_FEATURES)
-
     paths_files_level1 = list_files_in_subfolders(SOURCE_L1_PATH)
     paths_files_level2 = list_files_in_subfolders(SOURCE_L2_PATH)
 

@@ -138,7 +138,7 @@ plt.savefig(TARGET_PATH + 'outlier_plot.png')
 df_train = df[df['IrrB'].notna()].copy()
 df_test = df[df['IrrB'].isna()].copy()
 
-# Set minimum treshold ti fill and find gaps bigger than that
+# Set minimum treshold to fill and find gaps bigger than that
 gap_threshold = pd.Timedelta(days=1)
 df_train['gap'] = df_train['TimeJD'].diff()
 large_gaps_mask = (df_train['gap'] > gap_threshold)
