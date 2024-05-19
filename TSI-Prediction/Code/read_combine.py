@@ -38,11 +38,13 @@ def list_files_in_subfolders(folder_path):
         try:
             if(month != ".DS_Store"):
                 print(month)
-                for day in os.listdir(folder_path + month):
+                for day in os.listdir(folder_path + "/" + month):
                     if(day != ".DS_Store"):
-                        file_paths.append(folder_path + month + "/" + day)
+                        print(day)
+                        file_paths.append(folder_path + "/" + month + "/" + day)
         except:
             print("No files in this folder")
+    print(len(file_paths))
     return file_paths
 
 
